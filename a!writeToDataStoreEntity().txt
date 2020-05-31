@@ -1,0 +1,124 @@
+=load(
+  local!dataToLoad: cast(
+    'type!{urn:com:appian:types}Employee?list',
+    {
+      { firstName: "John" , lastName: "Smith" , department: "Engineering" , title: "Director" , phoneNumber: "555-123-4567" , startDate: today()-360 },
+      { firstName: "Michael" , lastName: "Johnson" , department: "Finance" , title: "Analyst" , phoneNumber: "555-987-6543" , startDate: today()-360 },
+      { firstName: "Mary", lastName: "Reed" , department: "Engineering" , title: "Software Engineer" , phoneNumber: "555-456-0123" , startDate: today()-240 },
+      { firstName: "Angela" , lastName: "Cooper" , department: "Sales" , title: "Manager" , phoneNumber: "555-123-4567" , startDate: today()-240 },
+      { firstName: "Elizabeth" , lastName: "Ward" , department: "Sales" , title: "Sales Associate" , phoneNumber: "555-987-6543" , startDate: today()-240 },
+      { firstName: "Daniel", lastName: "Lewis" , department: "HR" , title: "Manager" , phoneNumber: "555-876-5432" , startDate: today()-180 },
+      { firstName: "Paul" , lastName: "Martin" , department: "Finance" , title: "Analyst" , phoneNumber: "555-609-3691" , startDate: today()-150 },
+      { firstName: "Jessica" , lastName: "Peterson" , department: "Finance" , title: "Analyst" , phoneNumber: "555-987-6543" , startDate: today()-150 },
+      { firstName: "Mark" , lastName: "Hall" , department: "Professional Services" , title: "Director" , phoneNumber: "555-012-3456" , startDate: today()-150 },
+      { firstName: "Rebecca" , lastName: "Wood" , department: "Engineering" , title: "Manager" , phoneNumber: "555-210-3456" , startDate: today()-150 },
+      { firstName: "Pamela" , lastName: "Sanders" , department: "Engineering" , title: "Software Engineer" , phoneNumber: "555-123-4567" , startDate:today()-120 },
+      { firstName: "Christopher" , lastName: "Morris" , department: "Professional Services" , title: "Consultant" , phoneNumber: "555-456-7890" , startDate: today()-120 },
+      { firstName: "Kevin" , lastName: "Stewart" , department: "Professional Services" , title: "Manager" , phoneNumber: "555-345-6789" , startDate: today()-120 },
+      { firstName: "Stephen" , lastName: "Edwards" , department: "Sales" , title: "Sales Associate" , phoneNumber: "555-765-4321" , startDate: today()-120 },
+      { firstName: "Janet", lastName:"Coleman" , department: "Finance" , title: "Director" , phoneNumber: "555-654-3210" , startDate: today()-90 },
+      { firstName: "Scott" , lastName: "Bailey" , department: "Engineering" , title: "Software Engineer" , phoneNumber: "555-678-1235" , startDate: today()-30 },
+      { firstName: "Andrew" , lastName: "Nelson" , department: "Professional Services" , title: "Consultant" , phoneNumber: "555-789-4560" , startDate: today()-30 },
+      { firstName: "Michelle" , lastName: "Foster" , department: "HR" , title: "Director" , phoneNumber: "555-345-6789" , startDate: today()-30 },
+      { firstName: "Laura" , lastName:"Bryant" , department: "Sales" , title: "Sales Associate" , phoneNumber: "555-987-6543" , startDate: today() },
+      { firstName: "William" , lastName: "Ross" , department: "Engineering" , title: "Software Engineer" , phoneNumber: "555-123-4567" , startDate: today() }
+    }
+  ),
+  local!pagingInfo: a!pagingInfo(
+    startIndex: 1,
+    batchSize: 20,
+    sort: a!sortInfo(field: "id", ascending: true)
+  ),
+  with(
+    local!datasubset:a!queryEntity(
+      entity:cons!EMPLOYEE_DSE,
+      query:a!query(pagingInfo: local!pagingInfo)
+    ),
+    local!hasData: not( local!datasubset.totalCount=0 ),
+    a!sectionLayout(
+      contents:{
+        a!buttonLayout(
+          secondaryButtons:{
+            a!buttonWidgetSubmit(
+              label:if( local!hasData , "Data Already Published" , "Publish Data" ),
+              style:"PRIMARY",
+              saveInto:{
+                a!writeToDataStoreEntity(
+                  dataStoreEntity: cons!EMPLOYEE_DSE,
+                  valueToStore: local!dataToLoad
+                )
+              },
+              disabled: local!hasData
+            )
+          }
+        ),
+        a!gridField(
+          label:"Data from local data subset",
+          /* Show a grid from hard-coded data since nothing yet exists in the database*/
+          showwhen: local!datasubset.totalCount = 0,
+          labelPosition:"COLLAPSED",
+          totalCount:count( local!dataToLoad ),
+          columns:{
+            a!gridTextColumn( label:"ID", data: repeat( count( local!dataToLoad), "N/A") ),
+            a!gridTextColumn( label:"First Name", data:index( local!dataToLoad, "firstName", null) ),
+            a!gridTextColumn( label:"Last Name", data:index( local!dataToLoad, "lastName", null) ),
+            a!gridTextColumn( label:"Department", data:index( local!dataToLoad, "department", null) ),
+            a!gridTextColumn( label:"Title", data:index( local!dataToLoad, "title", null) ),
+            a!gridTextColumn( label:"Phone Number", data:index( local!dataToLoad, "phoneNumber", null) , alignment:"RIGHT" ),
+            a!gridTextColumn( label:"Start Date", data:index( local!dataToLoad, "startDate", null), alignment:"RIGHT" )
+          },
+          value:a!pagingInfo(1,20)
+        ),
+        a!gridField(
+          label:"Data from local datasubset",
+          /* Show a grid with database data*/
+          showwhen: not(local!datasubset.totalCount = 0),
+          labelPosition: "COLLAPSED",
+          totalCount: local!datasubset.totalCount,
+          columns:{
+            a!gridTextColumn(
+              label: "ID",
+              field: "id",
+              data: index(local!datasubset.data, "id", {}),
+              alignment: "RIGHT"
+            ),
+            a!gridTextColumn(
+              label: "First Name",
+              field: "firstName",
+              data: index(local!datasubset.data, "firstName", {})
+            ),
+            a!gridTextColumn(
+              label: "Last Name",
+              field: "lastName",
+              data: index(local!datasubset.data, "lastName", {})
+            ),
+            a!gridTextColumn(
+              label: "Department",
+              field: "department",
+              data: index(local!datasubset.data, "department", {})
+            ),
+            a!gridTextColumn(
+              label:"Title",
+              field: "title",
+              data: index(local!datasubset.data, "title", {})
+            ),
+            a!gridTextColumn(
+              label:"Phone Number",
+              field: "phoneNumber",
+              data: index(local!datasubset.data, "phoneNumber", {}),
+              alignment:"RIGHT"
+            ),
+            a!gridTextColumn(
+              label:"Start Date",
+              field: "startDate",
+              data: index(local!datasubset.data, "startDate", {}),
+              alignment:"RIGHT"
+            )
+          },
+          value: local!pagingInfo,
+          saveInto: local!pagingInfo
+        )
+      }
+    )
+  )
+)
